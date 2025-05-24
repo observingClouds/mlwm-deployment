@@ -5,21 +5,21 @@
 
 # working directory
 wd=$(pwd)
-
+data=/leonardo_scratch/large/userexternal/hschulz0/data/
 # git root directory
-git_root_dir=/home/ea/git
+git_root_dir=/leonardo/home/userexternal/hschulz0/repos/
 
-PYTHON="pdm run python"
+PYTHON="uv run python"
 
 # Step 1:
 #=========
 # 1.1 Get the model weights from the training
-CHECKPOINT=/dmidata/users/ea/neural-lam/data/saved_model/train-hi_lam-2x300-02_27_15-4034/last.ckpt
+CHECKPOINT=$data/saved_model/train-hi_lam-2x300-02_27_15-4034/last.ckpt
 
 # 1.2 Get statistics from training data so this can be used to standardize the inference data
 
 # 1.4 Get the neural-lam config file used for training
-neural_lam_config=/dmidata/users/ea/neural-lam/data/config.yaml
+neural_lam_config=$data/config.yaml
 
 # 1.3 Get the command (line arguemnts) used for training the model and for evaluation
 graph_name=rect_hi3
@@ -46,89 +46,48 @@ neural_lam_command_line_args=(
     --load ${CHECKPOINT}
     --eval val \
     --plot_vars pres_seasurface t2m u10m v10m pres0m lwavr0m swavr0m z700 t700 r700 u700 v700 tw700 r200 r1000 u1000
-    --save_eval_to_zarr_path /dmidata/users/ea/neural-lam/data/state_predictions.zarr
+    --save_eval_to_zarr_path $data/state_predictions.zarr
 )
 
 # Step 2:
 #=========
 # Inference data, data preparation, graph creation and neural-lam: Clone git repositories and install environments 
 # 2.1 Get you data to do inference from. If the data is in grib format, convert it to zarr
-mars_to_zarr_git_repo=https://github.com/ealerskans/mars_to_zarr.git
-mars_to_zarr_branch=feature/global-dt
-git clone --single-branch -b ${mars_to_zarr_branch} ${mars_to_zarr_git_repo} ${git_root_dir}/mars_to_zarr
-cd ${git_root_dir}/mars_to_zarr
-pdm venv create
-pdm use --venv in-project
-pdm install
-cd ${wd}
-# 2.2 mllam-data-prep
-mllam_data_prep_git_repo=https://github.com/ealerskans/mllam-data-prep.git
-mllam_data_prep_branch=dk-case-studies-with-global-dt
-git clone --single-branch -b ${mllam_data_prep_branch} ${mllam_data_prep_git_repo} ${git_root_dir}/mllam-data-prep
-cd ${git_root_dir}/mllam-data-prep
-pdm venv create
-pdm use --venv in-project
-pdm install -G latlon-domain-crop
-cd ${wd}
-# 2.3 weather-model-graphs - probably not needed...
-weather_model_graphs_git_repo=https://github.com/ealerskans/weather-model-graphs.git
-weather_model_graphs_branch=decoding_mask
-git clone --single-branch -b ${weather_model_graphs_branch} ${weather_model_graphs_git_repo} ${git_root_dir}/weather-model-graphs
-cd ${git_root_dir}/weather-model-graphs
-pdm venv create
-pdm use --venv in-project
-pdm install --dev
-cd ${wd}
-# 2.3 neural-lam
-neural_lam_git_repo=https://github.com/ealerskans/neural-lam.git
-neural_lam_branch=dk-case-studies-with-global-dt
-git clone --single-branch -b ${neural_lam_branch} ${neural_lam_git_repo} ${git_root_dir}/neural-lam
-cd ${git_root_dir}/neural-lam
-pdm venv create --with-pip
-pdm run python -m pip install torch --index-url https://download.pytorch.org/whl/cu124
-pdm install --group dev,graph
-cd ${wd}
 
 # Step 3:
 #=========
 # 3.1 Get you data to do inference from
 # 3.2 If the data is in grib format, convert it to zarr
-cd ${git_root_dir}/mars_to_zarr
-pdm run python -m mars_to_zarr --config example.globalDT.yaml -v
-cd ${wd}
+#cd ${git_root_dir}/mars_to_zarr
+#uv run python -m mars_to_zarr --config example.globalDT.yaml -v
+#cd ${wd}
 
 # Step 4:
 #=========
 # 4.1 Create mllam-data-prep datastore
-cd ${git_root_dir}/mllam-data-prep
-mdp_config=/dmidata/users/ea/neural-lam/data/globalDT.20241214.yaml
-${PYTHON} -m mllam_data_prep ${mdp_config}
-cd ${wd}
+#mdp_config=$data/globalDT.20241214.yaml
+#${PYTHON} -m mllam_data_prep ${mdp_config}
 # 4.2 Create mllam-data-prep boundary datastore
-cd ${git_root_dir}/mllam-data-prep
-mdp_config=/dmidata/users/ea/neural-lam/data/globalDT_boundary.20241214.yaml
-${PYTHON} -m mllam_data_prep ${mdp_config}
-cd ${wd}
+#mdp_config=$data/globalDT_boundary.20241214.yaml
+#${PYTHON} -m mllam_data_prep ${mdp_config}
 
 # Step 5:
 #=========
 # 5.1 Create graph - Hierarchical 3-level
-cd ${git_root_dir}/neural-lam
 lev=3
 #MND=12500 m
 MND=0.2 #  degrees (corresponds roughly to 12.5 km at latitude 55.5)
-${PYTHON} -m neural_lam.build_rectangular_graph \
-  --config_path ${neural_lam_config} \
-  --archetype hierarchical \
-  --max_num_levels ${lev} \
-  --mesh_node_distance ${MND} \
-  --graph_name ${graph_name}
-cd ${wd}
+#${PYTHON} -m neural_lam.build_rectangular_graph \
+#  --config_path ${neural_lam_config} \
+#  --archetype hierarchical \
+#  --max_num_levels ${lev} \
+#  --mesh_node_distance ${MND} \
+#  --graph_name ${graph_name}
+#cd ${wd}
 
 # Step 6:
 #=========
 # 6.1 Run inference
-cd ${git_root_dir}/neural-lam
 ${PYTHON} -m neural_lam.train_model "${neural_lam_command_line_args[@]}"
 
 # Open questions:
