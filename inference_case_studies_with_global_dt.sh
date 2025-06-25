@@ -59,16 +59,16 @@ neural_lam_command_line_args=(
 # 3.1 Get you data to do inference from
 # 3.2 If the data is in grib format, convert it to zarr
 #cd ${git_root_dir}/mars_to_zarr
-#uv run python -m mars_to_zarr --config example.globalDT.yaml -v
+#uv run python -m mars_to_zarr --config $data/globalDT_MARS_20241214.yaml -v
 #cd ${wd}
 
 # Step 4:
 #=========
 # 4.1 Create mllam-data-prep datastore
-#mdp_config=$data/globalDT.20241214.yaml
-#${PYTHON} -m mllam_data_prep ${mdp_config}
+mdp_config=$data/globalDT.20241214.yaml
+${PYTHON} -m mllam_data_prep ${mdp_config}
 # 4.2 Create mllam-data-prep boundary datastore
-#mdp_config=$data/globalDT_boundary.20241214.yaml
+mdp_config=$data/globalDT_boundary.20241214.yaml
 #${PYTHON} -m mllam_data_prep ${mdp_config}
 
 # Step 5:

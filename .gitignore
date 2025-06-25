@@ -5,3 +5,7 @@ __pycache__/
 uv.lock
 
 training_cli_args.yaml
+
+# pixi environments
+.pixi
+*.egg-info
