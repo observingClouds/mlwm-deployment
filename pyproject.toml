@@ -7,6 +7,7 @@ requires-python = ">=3.10,<3.13"
 dependencies = [
     "dask>=2025.4.1",
     "dotenv>=0.9.9",
+    "eccodes<=2.40",
     "ipdb>=0.13.13",
     "mllam-data-prep @ git+https://github.com/ealerskans/mllam-data-prep.git@dk-case-studies-with-global-dt",
     "numcodecs<0.12.0",
@@ -16,10 +17,11 @@ dependencies = [
     "zarr<3.0",
     "xarray>=2025",
     "mars_to_zarr @ git+https://github.com/observingClouds/mars_to_zarr.git@feature/global-dt",
-    "neural-lam @ git+https://github.com/observingclouds/neural-lam.git@dk-case-studies-with-global-dt",
+    "neural-lam @ git+https://github.com/observingclouds/neural-lam.git@icon_2", #dk-case-studies-with-global-dt",
     "weather-model-graphs @ git+https://github.com/ealerskans/weather-model-graphs.git@decoding_mask",
     "ipykernel>=6.29.5",
     "cartopy>=0.24.1",
+    "xesmf>=0.8.10",
 ]
 
 [dependency-groups]
@@ -59,3 +61,4 @@ dev = { features = ["dev"], solve-group = "default" }
 gdal = ">=3.11.0,<4"
 libgdal-grib = ">=3.11.0,<4"
 pygrib = ">=2.1.6,<3"
+xesmf = ">=0.8.10,<0.9"

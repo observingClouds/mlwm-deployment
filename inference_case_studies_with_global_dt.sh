@@ -59,14 +59,40 @@ neural_lam_command_line_args=(
 # 3.1 Get you data to do inference from
 # 3.2 If the data is in grib format, convert it to zarr
 #cd ${git_root_dir}/mars_to_zarr
-#uv run python -m mars_to_zarr --config $data/globalDT_MARS_20241214.yaml -v
+#uv run python -m mars_to_zarr --config ../mlwm-deployment/configurations/globalDT_MARS_20250624.yaml -v
 #cd ${wd}
 
+# 3.3 Regrid data to neural-lam grid
+# Surface for interior
+pixi run python src/mlwm/regrid.py --input_path $data/globalDT_regridded_20250624_sif_sf.zarr \
+   --output_path $data/globalDT_regridded_20250624_sif_sf.DANRA_grid.zarr \
+   --config_path $data/config.yaml \
+   --graph_name ${graph_name} \
+   --regrid_method nearest
+## Pressure levels for interior
+#uv run python src/mlwm/regrid.py --input_path $data/globalDT_MARS_20250624.zarr \
+#    --output_path $data/globalDT_MARS_20250624_regrid_pl.zarr \
+#    --config_path $data/config.yaml \
+#    --graph_name ${graph_name} \
+#    --regrid_method nearest \
+## Surface for boundary
+#uv run python src/mlwm/regrid.py --input_path $data/globalDT_regridded_20250624_sif_sf.zarr \
+#    --output_path $data/globalDT_regridded_20250624_sif_sf.ERA5_grid.zarr \
+#    --config_path $data/config.yaml \
+#    --graph_name ${graph_name} \
+#    --regrid_method nearest 
+## Pressure levels for boundary
+#uv run python src/mlwm/regrid.py --input_path $data/globalDT_MARS_20250624_boundary.zarr \
+#    --output_path $data/globalDT_MARS_202506        24_boundary_regrid_pl.zarr \
+#    --config_path $data/config.yaml \
+#    --graph_name ${graph_name} \
+#    --regrid_method nearest
+#
 # Step 4:
 #=========
 # 4.1 Create mllam-data-prep datastore
 mdp_config=$data/globalDT.20241214.yaml
-${PYTHON} -m mllam_data_prep ${mdp_config}
+#${PYTHON} -m mllam_data_prep ${mdp_config}
 # 4.2 Create mllam-data-prep boundary datastore
 mdp_config=$data/globalDT_boundary.20241214.yaml
 #${PYTHON} -m mllam_data_prep ${mdp_config}
@@ -76,14 +102,14 @@ mdp_config=$data/globalDT_boundary.20241214.yaml
 # 5.1 Create graph - Hierarchical 3-level
 lev=3
 #MND=12500 m
-MND=0.2 #  degrees (corresponds roughly to 12.5 km at latitude 55.5)
-#${PYTHON} -m neural_lam.build_rectangular_graph \
-#  --config_path ${neural_lam_config} \
-#  --archetype hierarchical \
-#  --max_num_levels ${lev} \
-#  --mesh_node_distance ${MND} \
-#  --graph_name ${graph_name}
-#cd ${wd}
+MND=1 #  degrees (corresponds roughly to 12.5 km at latitude 55.5)
+${PYTHON} -m neural_lam.build_rectangular_graph \
+  --config_path ${neural_lam_config} \
+  --archetype hierarchical \
+  --max_num_levels ${lev} \
+  --mesh_node_distance ${MND} \
+  --graph_name ${graph_name}
+cd ${wd}
 
 # Step 6:
 #=========
